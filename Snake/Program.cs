@@ -4,7 +4,7 @@ using System.Drawing;
 namespace Snake {
     class Program {
         static void Main() {
-            Snake snake = new Snake(10, 30);
+            Snake snake = new Snake(20, 50);
             snake.Start();
         }
     }
@@ -36,7 +36,7 @@ namespace Snake {
             _tail.Add(new Point(_x, _y));
         }
 
-        void GameOver() {
+        private void GameOver() {
             _gameOver = true;
 
             Console.Clear();
@@ -44,7 +44,7 @@ namespace Snake {
             Console.ReadKey();
         }
 
-        void DrawMap() {
+        private void DrawMap() {
             for (int i = 0; i < _map.GetLength(0); i++) {
                 for (int j = 0; j < _map.GetLength(1); j++) {
                     Console.SetCursorPosition(j, i);
@@ -53,7 +53,7 @@ namespace Snake {
             }
         }
 
-        void Fruit() {
+        private void Fruit() {
             Random rand = new Random();
             int randomY = rand.Next(_map.GetLength(0));
             int randomX = rand.Next(_map.GetLength(1));
@@ -73,7 +73,22 @@ namespace Snake {
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
-        void Update() {
+        private void CollisionDetection() {
+            // Check if snake is outside playable area
+            if (_x > _map.GetLength(1) | (_x + 2) <= 0 | _y > _map.GetLength(0) | (_y + 2) <= 0) {
+                GameOver();
+                return;
+            }
+
+            // Check if snake is colliding with itself
+            foreach (Point pos in _tail.Skip(1)) {
+                if (_tail[0].X == pos.X && _tail[0].Y == pos.Y) {
+                    GameOver();
+                    return;
+                }
+            }
+        }
+        private void Update() {
             // Replace the last tail's position with a tile character
             Console.SetCursorPosition(_tail.Last().X, _tail.Last().Y);
             Console.Write(_tileChar);
@@ -93,43 +108,49 @@ namespace Snake {
             _x += _xSpeed;
             _y += _ySpeed;
 
-            // Check if snake is outside playable area
-            if (_x > _map.GetLength(1) | (_x + 2) <= 0 | _y > _map.GetLength(0) | (_y + 2) <= 0) {
-                GameOver();
-                return;
-            }
+            CollisionDetection();
 
             foreach (Point pos in _tail) {
+                Console.ForegroundColor = pos == _tail[0] ? ConsoleColor.Green : ConsoleColor.DarkGreen;
                 Console.SetCursorPosition(pos.X, pos.Y);
-                Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write(_snakeChar);
             }
 
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
-        void KeyPress(ConsoleKeyInfo press) {
+        private void KeyPress(ConsoleKeyInfo press) {
             switch (press.Key) {
                 case ConsoleKey.UpArrow:
-                    _ySpeed = -1;
-                    _xSpeed = 0;
+                    if(_ySpeed != 1) {
+                        _ySpeed = -1;
+                        _xSpeed = 0;
+                    }
                     break;
                 case ConsoleKey.DownArrow:
-                    _ySpeed = 1;
-                    _xSpeed = 0;
+                    if(_ySpeed != -1) {
+                        _ySpeed = 1;
+                        _xSpeed = 0;
+                    }
                     break;
                 case ConsoleKey.LeftArrow:
-                    _xSpeed = -1;
-                    _ySpeed = 0;
+                    if(_xSpeed != 1) {
+                        _xSpeed = -1;
+                        _ySpeed = 0;
+                    }
                     break;
                 case ConsoleKey.RightArrow:
-                    _xSpeed = 1;
-                    _ySpeed = 0;
+                    if(_xSpeed != -1) {
+                        _xSpeed = 1;
+                        _ySpeed = 0;
+                    }
                     break;
+                default:
+                    throw new Exception();
             }
         }
 
-        void GameLoop() {
+        private void GameLoop() {
             while (true) {
                 if (_gameOver) break;
 
